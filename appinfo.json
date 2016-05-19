@@ -1,0 +1,64 @@
+{
+    "appKeys": {
+        "KEY_CONDITIONS": 1,
+        "KEY_TEMPERATURE": 0
+    },
+    "capabilities": [
+        "location",
+        "configurable",
+        "health"
+    ],
+    "companyName": "yoosee",
+    "enableMultiJS": true,
+    "longName": "Obsidian Watch",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/download.png",
+                "menuIcon": true,
+                "name": "IMAGE_FACEICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "characterRegex": "[0-9a-zA-Z ]",
+                "file": "fonts/DSNarXC.ttf",
+                "name": "FONT_DATE_24",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
+                "file": "images/bluetooth_not_connected_icon_color.png",
+                "name": "IMAGE_BG_DISCONNECTED",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "characterRegex": "[0-9A-Z]",
+                "file": "fonts/taco_bell_bold.ttf",
+                "name": "FONT_INFOTEXT_14",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9]",
+                "file": "fonts/Coda-Heavy.ttf",
+                "name": "FONT_FACENUM_27",
+                "targetPlatforms": null,
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Obsidian",
+    "targetPlatforms": [
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "12b2b931-9d8d-4750-b466-9584b9c1976b",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
