@@ -191,7 +191,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, s_date_layer);
   
   s_date_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(118, 54, 44, 25),
+    GRect(118, 74, 44, 25),
     GRect(88, 74, 44, 25)));
   text_layer_set_text(s_date_label, s_date_buffer);
   text_layer_set_background_color(s_date_label, GColorClear);

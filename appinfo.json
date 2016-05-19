@@ -22,13 +22,6 @@
                 "type": "bitmap"
             },
             {
-                "characterRegex": "[0-9a-zA-Z ]",
-                "file": "fonts/DSNarXC.ttf",
-                "name": "FONT_DATE_24",
-                "targetPlatforms": null,
-                "type": "font"
-            },
-            {
                 "file": "images/bluetooth_not_connected_icon_color.png",
                 "name": "IMAGE_BG_DISCONNECTED",
                 "targetPlatforms": null,
@@ -38,6 +31,13 @@
                 "characterRegex": "[0-9A-Z]",
                 "file": "fonts/taco_bell_bold.ttf",
                 "name": "FONT_INFOTEXT_14",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9a-zA-Z ]",
+                "file": "fonts/DSNarXC.ttf",
+                "name": "FONT_DATE_24",
                 "targetPlatforms": null,
                 "type": "font"
             },
