@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Obsidian Watchface</title>
+  <link rel='stylesheet' type='text/css' href='css/slate.min.css'>
+  <script src='js/slate.min.js'></script>
+  <style>
+  .title {
+    padding: 15px 10px;
+    text-transform: uppercase;
+    font-family: 'PT Sans', sans-serif;
+    font-size: 1.2em;
+    font-weight: 500;
+    color: #888888;
+    text-align: center;
+  }
+  </style>
+  </head>
+
+  <body>
+    <h1 class='title'>Obsidian Watchface</h1>
+
+    <div class='item-container'>
+      <div class='item-container-content'>
+        <div class='item'>
+					Watchface configurations.
+        </div>
+      </div>
+    </div>
+
+    <div class='item-container'>
+      <div class='item-container-header'></div>
+      <div class='item-container-content'>
+        <label class='item'>
+          Background Color
+          <input id='background_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+      <div class='item-container-footer'>
+        Choose the app's background color.
+      </div>
+    </div>
+
+		<div class="item-container">
+			<div class="item-container-header">Temparature Unit (F/C)</div>
+			<div class="item-container-content">
+				<label class="item">
+					Configure Temparature unit between F or C.
+					<input id="is_fahrenheit" type="checkbox" class="item-toggle" checked>
+				</label>
+			</div>
+			<div class="item-container-footer">
+				[ON] represents Fahrenheit, otherwise Celsius.
+			</div>
+		</div>
+		
+		<div class='item-container'>
+			<div class='button-container'>
+				<input id='submit_button' type='button' class='item-button' value='SAVE'>
+			</div>
+		</div>
+	</body>
+  <script>
+  function getConfigData() {
+    var backgroundColorPicker = document.getElementById('background_color_picker');
+    var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+ 
+    var options = {
+      'background_color': backgroundColorPicker.value,
+      'is_fahrenheit': isFahrenheitiCheckbox.checked
+    };
+
+    // Save for next launch
+    localStorage['background_color'] = options['background_color'];
+    localStorage['is_fahrenheit'] = options['is_fahrenheit'];
+
+    console.log('Got options: ' + JSON.stringify(options));
+    return options;
+  }
+
+  function getQueryParam(variable, defaultValue) {
+    var query = location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+      var pair = vars[i].split('=');
+      if (pair[0] === variable) {
+        return decodeURIComponent(pair[1]);
+      }
+    }
+    return defaultValue || false;
+  }
+ 
+  var submitButton = document.getElementById('submit_button');
+  submitButton.addEventListener('click', function() {
+    console.log('Submit');
+
+    // Set the return URL depending on the runtime environment
+    var return_to = getQueryParam('return_to', 'pebblejs://close#');
+    document.location = return_to + encodeURIComponent(JSON.stringify(getConfigData()));
+  });
+
+  (function() {
+    var backgroundColorPicker = document.getElementById('background_color_picker');
+    var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+
+    // Load any previously saved configuration, if available
+    if(localStorage['is_fahrenheit']) {
+      highContrastCheckbox.checked = JSON.parse(localStorage['is_fahrenheit']);
+      backgroundColorPicker.value = localStorage['background_color'];
+    }
+  })();
+  </script>
+</html>
