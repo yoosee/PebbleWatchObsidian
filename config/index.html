@@ -42,15 +42,15 @@
     </div>
 
 		<div class="item-container">
-			<div class="item-container-header">Temparature Unit (F/C)</div>
+			<div class="item-container-header">Temparature Unit (C/F)</div>
 			<div class="item-container-content">
 				<label class="item">
-					Configure Temparature unit between F or C.
-					<input id="is_fahrenheit" type="checkbox" class="item-toggle" checked>
+					Temparature unit C / F.
+					<input id="is_fahrenheit" type="checkbox" class="item-toggle">
 				</label>
 			</div>
 			<div class="item-container-footer">
-				[ON] represents Fahrenheit, otherwise Celsius.
+				[checked] represents Fahrenheit, otherwise Celsius.
 			</div>
 		</div>
 		
@@ -105,7 +105,7 @@
 
     // Load any previously saved configuration, if available
     if(localStorage['is_fahrenheit']) {
-      highContrastCheckbox.checked = JSON.parse(localStorage['is_fahrenheit']);
+      isFahrenheitCheckbox.checked = JSON.parse(localStorage['is_fahrenheit']);
       backgroundColorPicker.value = localStorage['background_color'];
     }
   })();
