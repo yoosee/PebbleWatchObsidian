@@ -28,19 +28,6 @@
       </div>
     </div>
 
-    <div class='item-container'>
-      <div class='item-container-header'></div>
-      <div class='item-container-content'>
-        <label class='item'>
-          Background Color
-          <input id='background_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
-        </label>
-      </div>
-      <div class='item-container-footer'>
-        Choose the app's background color.
-      </div>
-    </div>
-
 		<div class="item-container">
 			<div class="item-container-header">Temparature Unit (C/F)</div>
 			<div class="item-container-content">
@@ -54,6 +41,50 @@
 			</div>
 		</div>
 		
+    <div class='item-container'>
+      <div class='item-container-header'>Color Configuration</div>
+
+      <div class='item-container-content'>
+        <label class='item'> Background Color
+          <input id='background_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-content'>
+        <label class='item'> Face Color
+          <input id='face_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-content'>
+        <label class='item'> Health Steps Color
+          <input id='steps_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-content'>
+        <label class='item'> Weather Color
+          <input id='weather_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-content'>
+        <label class='item'> Hour Hand Color
+          <input id='hourhand_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-content'>
+        <label class='item'> Minute Hand Color
+          <input id='minutehand_color_picker' type='text' class='item-color item-color-sunny' value='#000000'>
+        </label>
+      </div>
+			
+      <div class='item-container-footer'>
+        Choose the app's color for Background, Face (number and dots), Steps, Weather, Hour hand and Minute hand.
+      </div>
+    </div>
+
 		<div class='item-container'>
 			<div class='button-container'>
 				<input id='submit_button' type='button' class='item-button' value='SAVE'>
@@ -62,17 +93,32 @@
 	</body>
   <script>
   function getConfigData() {
-    var backgroundColorPicker = document.getElementById('background_color_picker');
     var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+    var backgroundColorPicker = document.getElementById('background_color_picker');
+    var faceColorPicker = document.getElementById('face_color_picker');
+    var stepsColorPicker = document.getElementById('steps_color_picker');
+    var weatherColorPicker = document.getElementById('weather_color_picker');
+    var hourhandColorPicker = document.getElementById('hourhand_color_picker');
+    var minutehandColorPicker = document.getElementById('minutehand_color_picker');
  
     var options = {
+      'is_fahrenheit': isFahrenheitCheckbox.checked,
       'background_color': backgroundColorPicker.value,
-      'is_fahrenheit': isFahrenheitCheckbox.checked
+      'face_color': faceColorPicker.value,
+      'steps_color': stepsColorPicker.value,
+      'weather_color': weatherColorPicker.value,
+      'hourhand_color': hourhandColorPicker.value,
+      'minutehand_color': minutehandColorPicker.value
     };
 
     // Save for next launch
-    localStorage['background_color'] = options['background_color'];
     localStorage['is_fahrenheit'] = options['is_fahrenheit'];
+    localStorage['background_color'] = options['background_color'];
+    localStorage['face_color'] = options['face_color'];
+    localStorage['steps_color'] = options['steps_color'];
+    localStorage['weather_color'] = options['weather_color'];
+    localStorage['hourhand_color'] = options['hourhand_color'];
+    localStorage['minutehand_color'] = options['minutehand_color'];
 
     console.log('Got options: ' + JSON.stringify(options));
     return options;
@@ -100,13 +146,23 @@
   });
 
   (function() {
-    var backgroundColorPicker = document.getElementById('background_color_picker');
     var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+    var backgroundColorPicker = document.getElementById('background_color_picker');
+    var faceColorPicker = document.getElementById('face_color_picker');
+    var stepsColorPicker = document.getElementById('steps_color_picker');
+    var weatherColorPicker = document.getElementById('weather_color_picker');
+    var hourhandColorPicker = document.getElementById('hourhand_color_picker');
+    var minutehandColorPicker = document.getElementById('minutehand_color_picker');
 
     // Load any previously saved configuration, if available
     if(localStorage['is_fahrenheit']) {
       isFahrenheitCheckbox.checked = JSON.parse(localStorage['is_fahrenheit']);
       backgroundColorPicker.value = localStorage['background_color'];
+      faceColorPicker.value = localStorage['face_color'];
+      stepsColorPicker.value = localStorage['steps_color'];
+      weatherColorPicker.value = localStorage['weather_color'];
+      hourhandColorPicker.value = hourhandlocalStorage['_color'];
+      minutehandColorPicker.value = localStorage['minutehand_color'];
     }
   })();
   </script>
