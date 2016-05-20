@@ -1,6 +1,7 @@
 {
     "appKeys": {
         "KEY_CONDITIONS": 1,
+        "KEY_IS_FAHRENHEIT": 1,
         "KEY_TEMPERATURE": 0
     },
     "capabilities": [

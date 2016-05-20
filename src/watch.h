@@ -2,6 +2,7 @@
 
 #define KEY_TEMPERATURE 0
 #define KEY_CONDITIONS 1
+#define KEY_IS_FAHRENHEIT 2
 
 extern void init();
 extern void deinit();

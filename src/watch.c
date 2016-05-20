@@ -143,13 +143,16 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   // Read tuples for data
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
   Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
+  
+  Tuple *is_fahrenheit_tuple = dict_find(iterator, KEY_IS_FAHRENHEIT);
 
   // If all data is available, use it
   if(temp_tuple && conditions_tuple) {
-    bool config_temp_fahrenheit = true;
-    if(config_temp_fahrenheit) {
+    if(is_fahrenheit_tuple && is_fahrenheit_tuple->value->int8 > 0) {
+      persist_write_bool(KEY_IS_FAHRENHEIT, true);
       snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int) (temp_tuple->value->int32 * 9 / 5 + 32)); // Fahrenheit  
     } else {
+      persist_write_bool(KEY_IS_FAHRENHEIT, false);
       snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32); // Celsius by default  
     }
     snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", conditions_tuple->value->cstring);

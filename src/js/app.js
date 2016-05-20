@@ -28,10 +28,12 @@ function locationSuccess(pos) {
        var conditions = json.weather[0].main;
        console.log('Conditions are ' + conditions);
       
+      var condistions_max_length = 8;
+      
       // Assemble dictionary using our keys
       var dictionary = {
           'KEY_TEMPERATURE': temperature,
-          'KEY_CONDITIONS': conditions.toUpperCase()
+          'KEY_CONDITIONS': conditions.substring(0, Math.min(condistions_max_length,conditions.length)).toUpperCase()
       };
 
       // Send to Pebble
@@ -76,3 +78,30 @@ Pebble.addEventListener('appmessage',
     getWeather();
   }                     
 );
+
+// Configuration
+Pebble.addEventListener('showConfiguration', function() {
+  var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
+  // var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html' // produuction
+  console.log('Showing configuration page: ' + url);
+
+  Pebble.openURL(url);
+});
+
+Pebble.addEventListener('webviewclosed', function(e) {
+  var configData = JSON.parse(decodeURIComponent(e.response));
+  console.log('Configuration page returned: ' + JSON.stringify(configData));
+
+  var backgroundColor = configData['background_color'];
+
+  var dict = {};
+  dict['KEY_IS_FAHRENHEIT'] = configData['is_fahrenheit'] ? 1 : 0;  // Send a boolean as an integer
+
+  // Send to watchapp
+  Pebble.sendAppMessage(dict, function() {
+    console.log('Send successful: ' + JSON.stringify(dict));
+  }, function() {
+    console.log('Send failed!');
+  });
+});
+
