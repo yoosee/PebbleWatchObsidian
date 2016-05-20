@@ -9,7 +9,7 @@ static GFont s_date_font, s_weather_font, s_steps_font;
 static TextLayer *s_date_label, *s_weather_label, *s_steps_label;
 
 static GFont s_time_font;
-static TextLayer *s_time_3_label, *s_time_6_label, *s_time_9_label, *s_time_12_label;
+static TextLayer *s_time_label[13];
 
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
@@ -18,6 +18,8 @@ static GBitmap *s_bt_icon_bitmap;
 static BitmapLayer *s_bt_icon_layer;
 
 static char s_date_buffer[12];
+static int s_temp_c;
+static char s_weather_condition[32];
 
 /* *** Bluetooth Callback *** */
 
@@ -45,34 +47,35 @@ static void proc_bg_update (Layer *layer, GContext *ctx) {
   
   s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_FACENUM_27));
   
-    s_time_12_label = text_layer_create(PBL_IF_ROUND_ELSE(GRect(77, 2, 40, 34), GRect(60, 0, 40, 34)));
-  text_layer_set_background_color(s_time_12_label, GColorClear);
-  text_layer_set_text_color(s_time_12_label, GColorWhite); 
-  text_layer_set_text(s_time_12_label, "12");
-  text_layer_set_font(s_time_12_label, s_time_font);
-  layer_add_child(s_date_layer, text_layer_get_layer(s_time_12_label));
-  
-    s_time_3_label = text_layer_create(PBL_IF_ROUND_ELSE(GRect(155, 74, 30, 34),GRect(124, 71, 30, 34)));
-  text_layer_set_background_color(s_time_3_label, GColorClear);
-  text_layer_set_text_color(s_time_3_label, GColorWhite);
-  text_layer_set_text(s_time_3_label, "3");
-  text_layer_set_font(s_time_3_label, s_time_font);
-  layer_add_child(s_date_layer, text_layer_get_layer(s_time_3_label));
-  
-    s_time_6_label = text_layer_create(PBL_IF_ROUND_ELSE(GRect(81, 146, 30, 34),GRect(66, 136, 30, 34)));
-  text_layer_set_background_color(s_time_6_label, GColorClear);
-  text_layer_set_text_color(s_time_6_label, GColorWhite);
-  text_layer_set_text(s_time_6_label, "6");
-  text_layer_set_font(s_time_6_label, s_time_font);
-  layer_add_child(s_date_layer, text_layer_get_layer(s_time_6_label));
-  
-    s_time_9_label = text_layer_create(PBL_IF_ROUND_ELSE(GRect(7, 74, 30, 34),GRect(0, 71, 30, 34)));
-  text_layer_set_background_color(s_time_9_label, GColorClear);
-  text_layer_set_text_color(s_time_9_label, GColorWhite);
-  text_layer_set_text(s_time_9_label, "9");
-  text_layer_set_font(s_time_9_label, s_time_font);
-  layer_add_child(s_date_layer, text_layer_get_layer(s_time_9_label));
-  
+  static char buf[12][3];
+  for (int i = 1; i <= 12; ++i) {
+    if (i == 12 || i == 3 || i == 6 || i ==9) {
+      switch(i) {
+        case 12:
+        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(77, 2, 40, 34), GRect(60, 0, 40, 34)));  
+        break;
+        case 3: 
+        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(155, 74, 30, 34),GRect(124, 71, 30, 34)));  
+        break;
+        case 6:
+        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(81, 146, 30, 34),GRect(66, 136, 30, 34)));    
+        break;
+        case 9:
+        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(7, 74, 30, 34),GRect(0, 71, 30, 34)));
+        break;
+        default:
+        ;
+      }
+      snprintf(buf[i], sizeof(buf[i]), "%d", i);
+      text_layer_set_background_color(s_time_label[i], GColorClear);
+      text_layer_set_text_color(s_time_label[i], GColorWhite); 
+      text_layer_set_text(s_time_label[i], buf[i]);
+      text_layer_set_font(s_time_label[i], s_time_font);
+      layer_add_child(s_bg_layer, text_layer_get_layer(s_time_label[i])); 
+      APP_LOG(APP_LOG_LEVEL_INFO, "Building Face Num: %s", buf[i]);
+    }
+  }
+
 }
 
 static void proc_hands_update (Layer *layer, GContext *ctx) {
@@ -132,38 +135,50 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 }
 
+/* *** Update Weather *** */
+
+static void update_weather() {
+  static char temperature_buffer[8];
+  static char weather_label_buffer[32];
+  
+  //if(s_temp_c && s_weather_condition != null) {
+    if(persist_read_bool(KEY_IS_FAHRENHEIT)) {          
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int) (s_temp_c * 9 / 5 + 32)); // Fahrenheit  
+    } else {
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)s_temp_c); // Celsius by default    
+    }
+    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "%s\n%s", s_weather_condition, temperature_buffer);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Weather: %s", weather_label_buffer);
+    text_layer_set_text(s_weather_label, weather_label_buffer);
+  //}
+}
+
 /* *** callbacks *** */
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  // Store incoming information
-  static char temperature_buffer[8];
-  static char conditions_buffer[32];
-  static char weather_layer_buffer[32];
-  
   // Read tuples for data
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
   Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
-  
   Tuple *is_fahrenheit_tuple = dict_find(iterator, KEY_IS_FAHRENHEIT);
-
-  // If all data is available, use it
-  if(temp_tuple && conditions_tuple) {
-    if(is_fahrenheit_tuple && is_fahrenheit_tuple->value->int8 > 0) {
+  
+  APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
+  
+  if(is_fahrenheit_tuple) {
+    if (is_fahrenheit_tuple->value->int8 > 0) {
       persist_write_bool(KEY_IS_FAHRENHEIT, true);
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int) (temp_tuple->value->int32 * 9 / 5 + 32)); // Fahrenheit  
     } else {
       persist_write_bool(KEY_IS_FAHRENHEIT, false);
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)temp_tuple->value->int32); // Celsius by default  
     }
-    snprintf(conditions_buffer, sizeof(conditions_buffer), "%s", conditions_tuple->value->cstring);
+    update_weather();
   }
   
-  // Assemble full string and display
-  snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "%s\n%s", conditions_buffer, temperature_buffer);
+  if(temp_tuple && conditions_tuple) {
+    s_temp_c = temp_tuple->value->int32;
+    snprintf(s_weather_condition, sizeof(s_weather_condition), "%s", conditions_tuple->value->cstring);  
+    APP_LOG(APP_LOG_LEVEL_INFO, "weather update from tuple: %s %d", s_weather_condition, s_temp_c);
+    update_weather();
+  }
   
-  APP_LOG(APP_LOG_LEVEL_INFO, "Weather: %s", weather_layer_buffer);
-  
-  text_layer_set_text(s_weather_label, weather_layer_buffer);
 }
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
@@ -230,7 +245,7 @@ static void main_window_load(Window *window) {
       
   // Create Bluetooth layer
   s_bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BG_DISCONNECTED);
-  s_bt_icon_layer = bitmap_layer_create(GRect(36, 78, 19, 24));
+  s_bt_icon_layer = bitmap_layer_create(GRect(46, 78, 19, 24));
   bitmap_layer_set_bitmap(s_bt_icon_layer, s_bt_icon_bitmap);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_bt_icon_layer));
   // Show the correct state of the BT connection from the start
@@ -255,9 +270,19 @@ static void main_window_unload(Window *window) {
   fonts_unload_custom_font(s_date_font);
   fonts_unload_custom_font(s_steps_font);
   
+  for(int i=3; i <= 12; i+=3) {
+    text_layer_destroy(s_time_label[i]);  
+  }
+  
+  fonts_unload_custom_font(s_time_font);
+  
   gbitmap_destroy(s_bt_icon_bitmap);
   bitmap_layer_destroy(s_bt_icon_layer);
 }
+
+/* *** Color Configuration *** */
+
+
 
 /* *** init / deinit and setup functions *** */
 
@@ -284,9 +309,7 @@ static void setup_callbacks() {
   app_message_register_outbox_sent(outbox_sent_callback);
   
   // Open AppMessage
-  const int inbox_size = 128;
-  const int outbox_size = 128;
-  app_message_open(inbox_size, outbox_size);
+  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 }
 
 void init() {

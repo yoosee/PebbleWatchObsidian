@@ -1,7 +1,13 @@
 {
     "appKeys": {
+        "KEY_COLOR_BACKGROUND": 10,
+        "KEY_COLOR_FACE": 11,
+        "KEY_COLOR_HOURHAND": 14,
+        "KEY_COLOR_MINUTEHAND": 15,
+        "KEY_COLOR_STEPS": 12,
+        "KEY_COLOR_WEATHER": 13,
         "KEY_CONDITIONS": 1,
-        "KEY_IS_FAHRENHEIT": 1,
+        "KEY_IS_FAHRENHEIT": 2,
         "KEY_TEMPERATURE": 0
     },
     "capabilities": [

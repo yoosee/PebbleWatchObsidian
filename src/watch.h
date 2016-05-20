@@ -2,7 +2,15 @@
 
 #define KEY_TEMPERATURE 0
 #define KEY_CONDITIONS 1
+
 #define KEY_IS_FAHRENHEIT 2
+
+#define KEY_COLOR_BACKGROUND 10
+#define KEY_COLOR_FACE 11
+#define KEY_COLOR_STEPS 12
+#define KEY_COLOR_WEATHER 13
+#define KEY_COLOR_HOURHAND 14
+#define KEY_COLOR_MINUTEHAND 15
 
 extern void init();
 extern void deinit();
