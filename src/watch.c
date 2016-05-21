@@ -37,7 +37,19 @@ static void bluetooth_callback(bool connected) {
 /* *** proc layer updates *** */
 
 static void proc_bg_update (Layer *layer, GContext *ctx) {
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  
+  // Read and setup Background Color (default Black)
+  int32_t colorcode_background = persist_read_int(KEY_COLOR_BACKGROUND) ? persist_read_int(KEY_COLOR_BACKGROUND) : 0x000000;
+  GColor color_background = GColorFromHEX(colorcode_background);
+  window_set_background_color(s_main_window, color_background);
+  
+  // Read and setup Face Color (default White)
+  int32_t colorcode_face = persist_read_int(KEY_COLOR_FACE) ? persist_read_int(KEY_COLOR_FACE) : 0xffffff;
+  GColor color_face = GColorFromHEX(colorcode_face);
+  
+  APP_LOG(APP_LOG_LEVEL_INFO, "BG and Face Color: %02x, %02x", (int)colorcode_background, (int)colorcode_face);
+  
+  graphics_context_set_fill_color(ctx, color_face);
   for (int i = 0; i < NUM_CLOCK_TICKS; ++i) {
     const int x_offset = PBL_IF_ROUND_ELSE(18, 0);
     const int y_offset = PBL_IF_ROUND_ELSE(6, 0);
@@ -46,33 +58,33 @@ static void proc_bg_update (Layer *layer, GContext *ctx) {
   }
   
   s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_FACENUM_27));
-  
-  static char buf[12][3];
-  for (int i = 1; i <= 12; ++i) {
-    if (i == 12 || i == 3 || i == 6 || i ==9) {
+
+  for (int i = 1; i <= 12; ++i) { 
+    if (i == 3 || i == 6 || i == 9 || i == 12) { // only shows 3, 6, 9, 12
       switch(i) {
-        case 12:
-        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(77, 2, 40, 34), GRect(60, 0, 40, 34)));  
-        break;
         case 3: 
         s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(155, 74, 30, 34),GRect(124, 71, 30, 34)));  
+        text_layer_set_text(s_time_label[i], "3");
         break;
         case 6:
         s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(81, 146, 30, 34),GRect(66, 136, 30, 34)));    
+        text_layer_set_text(s_time_label[i], "6");
         break;
         case 9:
         s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(7, 74, 30, 34),GRect(0, 71, 30, 34)));
+        text_layer_set_text(s_time_label[i], "9");
+        break;       
+        case 12:
+        s_time_label[i] = text_layer_create(PBL_IF_ROUND_ELSE(GRect(77, 2, 40, 34), GRect(60, 0, 40, 34)));  
+        text_layer_set_text(s_time_label[i], "12");
         break;
         default:
         ;
       }
-      snprintf(buf[i], sizeof(buf[i]), "%d", i);
       text_layer_set_background_color(s_time_label[i], GColorClear);
-      text_layer_set_text_color(s_time_label[i], GColorWhite); 
-      text_layer_set_text(s_time_label[i], buf[i]);
+      text_layer_set_text_color(s_time_label[i], color_face); 
       text_layer_set_font(s_time_label[i], s_time_font);
       layer_add_child(s_bg_layer, text_layer_get_layer(s_time_label[i])); 
-      APP_LOG(APP_LOG_LEVEL_INFO, "Building Face Num: %s", buf[i]);
     }
   }
 
@@ -161,15 +173,27 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
   Tuple *is_fahrenheit_tuple = dict_find(iterator, KEY_IS_FAHRENHEIT);
   
-  APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
+  Tuple *color_background_tuple = dict_find(iterator, KEY_COLOR_BACKGROUND);
+  Tuple *color_face_tuple = dict_find(iterator, KEY_COLOR_FACE);
+  Tuple *color_steps_tuple = dict_find(iterator, KEY_COLOR_STEPS);
+  Tuple *color_weather_tuple = dict_find(iterator, KEY_COLOR_WEATHER);
+  Tuple *color_hourhand_tuple = dict_find(iterator, KEY_COLOR_HOURHAND);
+  Tuple *color_minutehand_tuple = dict_find(iterator, KEY_COLOR_MINUTEHAND);
+  
+  if(color_background_tuple) { persist_write_int(KEY_COLOR_BACKGROUND, color_background_tuple->value->int32); 
+                             APP_LOG(APP_LOG_LEVEL_INFO, "background color tuple: %02x", (int)color_background_tuple->value->int32);
+                             }
+  if(color_face_tuple)            { persist_write_int(KEY_COLOR_FACE, color_face_tuple->value->int32); }
   
   if(is_fahrenheit_tuple) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
     if (is_fahrenheit_tuple->value->int8 > 0) {
       persist_write_bool(KEY_IS_FAHRENHEIT, true);
     } else {
       persist_write_bool(KEY_IS_FAHRENHEIT, false);
     }
     update_weather();
+    layer_mark_dirty(window_get_root_layer(s_main_window));
   }
   
   if(temp_tuple && conditions_tuple) {
@@ -308,8 +332,12 @@ static void setup_callbacks() {
   app_message_register_outbox_failed(outbox_failed_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
   
+  //s_temp_c = 0;
+  //s_weather_condition[0] = '\0';
+  
   // Open AppMessage
-  app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+  app_message_open(APP_MESSAGE_INBOX_SIZE_MINIMUM, APP_MESSAGE_OUTBOX_SIZE_MINIMUM);
 }
 
 void init() {

@@ -81,22 +81,6 @@ Pebble.addEventListener('appmessage',
 
 // Configuration
 
-function hashCode(str) { // java String#hashCode
-    var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-       hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return hash;
-} 
-
-function intToRGB(i){
-    var c = (i & 0x00FFFFFF)
-        .toString(16)
-        .toUpperCase();
-
-    return "00000".substring(0, 6 - c.length) + c;
-}
-
 Pebble.addEventListener('showConfiguration', function() {
   var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
   // var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html' // produuction
@@ -109,12 +93,17 @@ Pebble.addEventListener('webviewclosed', function(e) {
   var configData = JSON.parse(decodeURIComponent(e.response));
   console.log('Configuration page returned: ' + JSON.stringify(configData));
   
-  var backgroundColor = configData['background_color'];
+  //var background_color = configData['background_color'];
   var is_fahrenheit = configData['is_fahrenheit'] ? 1 : 0; // Send a boolean as an integer
   
   var dictionary = {
     'KEY_IS_FAHRENHEIT': is_fahrenheit,
-    'KEY_BACKGROUND_COLOR': intToRGB(hashCode(backgroundColor))
+    'KEY_COLOR_BACKGROUND': parseInt(configData['background_color']),
+    'KEY_COLOR_FACE': parseInt(configData['face_color']),
+    'KEY_COLOR_STEPS': parseInt(configData['steps_color']),
+    'KEY_COLOR_WEATHER': parseInt(configData['weather_color']),
+    'KEY_COLOR_HOURHAND': parseInt(configData['hourhand_color']),
+    'KEY_COLOR_MINUTEHAND': parseInt(configData['minutehand_color'])
   };
   
   // Send to watchapp
