@@ -184,6 +184,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
                              APP_LOG(APP_LOG_LEVEL_INFO, "background color tuple: %02x", (int)color_background_tuple->value->int32);
                              }
   if(color_face_tuple)            { persist_write_int(KEY_COLOR_FACE, color_face_tuple->value->int32); }
+  if(color_steps_tuple)          { persist_write_int(KEY_COLOR_STEPS, color_steps_tuple->value->int32); }
+  if(color_weather_tuple)     { persist_write_int(KEY_COLOR_WEATHER, color_weather_tuple->value->int32); }
+  if(color_hourhand_tuple)    { persist_write_int(KEY_COLOR_HOURHAND, color_hourhand_tuple->value->int32); }
+  if(color_minutehand_tuple) { persist_write_int(KEY_COLOR_MINUTEHAND, color_minutehand_tuple->value->int32); }
   
   if(is_fahrenheit_tuple) {
     APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
