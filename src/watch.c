@@ -34,6 +34,16 @@ static void setup_colors() {
   colorcode_minutehand = persist_read_int(KEY_COLOR_MINUTEHAND) ? persist_read_int(KEY_COLOR_MINUTEHAND) : COLOR_DEFAULT_MINUTEHAND;
 }
 
+static void update_colors() {
+  setup_colors();
+  window_set_background_color(s_main_window, GColorFromHEX(colorcode_background));
+  //proc_bg_update...
+  text_layer_set_text_color(s_date_label, GColorFromHEX(colorcode_face));
+  text_layer_set_text_color(s_steps_label, GColorFromHEX(colorcode_steps));
+  text_layer_set_text_color(s_weather_label, GColorFromHEX(colorcode_weather));  
+  //proc_hands_update...
+}
+
 /* *** Bluetooth Callback *** */
 
 // Bluetooth connection indicator (shown when disconnected)
@@ -105,18 +115,23 @@ static void proc_hands_update (Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   // GPoint center = grect_center_point(&bounds);
   
+  // Read Color codes
+  setup_colors();
+  
   time_t now = time(NULL);
   struct tm *t = localtime(&now);  
   
   // minute hand
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  GColor color_minutehand = GColorFromHEX(colorcode_minutehand);
+  graphics_context_set_fill_color(ctx, color_minutehand);
   graphics_context_set_stroke_color(ctx, GColorBlack);  
   gpath_rotate_to(s_minute_arrow, TRIG_MAX_ANGLE * t->tm_min / 60);
   gpath_draw_filled(ctx, s_minute_arrow);
   gpath_draw_outline(ctx, s_minute_arrow);
   
   // hour hand
-  graphics_context_set_fill_color(ctx, GColorJazzberryJam);
+  GColor color_hourhand = GColorFromHEX(colorcode_hourhand);
+  graphics_context_set_fill_color(ctx, color_hourhand);
   graphics_context_set_stroke_color(ctx, GColorBlack);
   gpath_rotate_to(s_hour_arrow, (TRIG_MAX_ANGLE * (((t->tm_hour % 12) * 6) + (t->tm_min / 10))) / (12 * 6));
   gpath_draw_filled(ctx, s_hour_arrow);
@@ -138,7 +153,7 @@ static void proc_date_update (Layer *layer, GContext *ctx) {
 /* *** tick handlers *** */
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  if(tick_time->tm_sec % 30 == 0) { // update in every 30 sec
+  if(tick_time->tm_sec % TICK_UPDATE_SECONDS == 0) { // update in every 30 sec
     layer_mark_dirty(window_get_root_layer(s_main_window));
   }
 }
@@ -200,6 +215,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if(color_hourhand_tuple)    { persist_write_int(KEY_COLOR_HOURHAND, color_hourhand_tuple->value->int32); }
   if(color_minutehand_tuple) { persist_write_int(KEY_COLOR_MINUTEHAND, color_minutehand_tuple->value->int32); }
   
+  if(color_steps_tuple && color_weather_tuple) {
+    update_colors();
+  }
+  
   if(is_fahrenheit_tuple) {
     APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
     if (is_fahrenheit_tuple->value->int8 > 0) {
@@ -236,7 +255,10 @@ static void main_window_load(Window *window) {
   // Get information about the Window
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
-
+  
+  // Read color code
+  setup_colors();
+  
   // Create Background and add to main layer
   s_bg_layer = layer_create(bounds);
   layer_set_update_proc(s_bg_layer, proc_bg_update);
@@ -246,13 +268,15 @@ static void main_window_load(Window *window) {
   s_date_layer = layer_create(bounds);
   layer_set_update_proc(s_date_layer, proc_date_update);
   layer_add_child(window_layer, s_date_layer);
-  
+
+  GColor color_face = GColorFromHEX(colorcode_face);
+
   s_date_label = text_layer_create(PBL_IF_ROUND_ELSE(
     GRect(118, 74, 44, 25),
     GRect(88, 74, 44, 25)));
   text_layer_set_text(s_date_label, s_date_buffer);
   text_layer_set_background_color(s_date_label, GColorClear);
-  text_layer_set_text_color(s_date_label, GColorWhite);
+  text_layer_set_text_color(s_date_label, color_face);
   s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_24));
   text_layer_set_font(s_date_label, s_date_font);
   layer_add_child(s_date_layer, text_layer_get_layer(s_date_label));
@@ -261,8 +285,10 @@ static void main_window_load(Window *window) {
   s_weather_label = text_layer_create(
     GRect(0, PBL_IF_ROUND_ELSE(110,105), bounds.size.w, 50));
 
+  GColor color_weather = GColorFromHEX(colorcode_weather);
+  
   text_layer_set_background_color(s_weather_label, GColorClear);
-  text_layer_set_text_color(s_weather_label, GColorTiffanyBlue);
+  text_layer_set_text_color(s_weather_label, color_weather);
   text_layer_set_text_alignment(s_weather_label, GTextAlignmentCenter);
   text_layer_set_text(s_weather_label, "LOADING");
   
@@ -274,8 +300,10 @@ static void main_window_load(Window *window) {
   s_steps_label = text_layer_create(
     GRect(0, PBL_IF_ROUND_ELSE(45, 35), bounds.size.w, 20));
   
+  GColor color_steps = GColorFromHEX(colorcode_steps);
+  
   text_layer_set_background_color(s_steps_label, GColorClear);
-  text_layer_set_text_color(s_steps_label, GColorIndigo);
+  text_layer_set_text_color(s_steps_label, color_steps);
   text_layer_set_text_alignment(s_steps_label, GTextAlignmentCenter);
   s_steps_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_INFOTEXT_14));
   text_layer_set_font(s_steps_label, s_steps_font);

@@ -12,19 +12,21 @@
 #define KEY_COLOR_HOURHAND 14
 #define KEY_COLOR_MINUTEHAND 15
 
-#define COLOR_BACKGROUND_BACKGROUND 0x000000
-#define COLOR_BACKGROUND_FACE 0xffffff
-#define COLOR_BACKGROUND_STEPS 0x482748
-#define COLOR_BACKGROUND_WEATHER 0x4cb4db
-#define COLOR_BACKGROUND_HOURHAND 0xe35462
-#define COLOR_BACKGROUND_MINUTEHAND 0xffffff
-
 extern void init();
 extern void deinit();
 
 // Watch Configuration resources
 
 #define NUM_CLOCK_TICKS 8
+
+#define TICK_UPDATE_SECONDS 30
+
+#define COLOR_DEFAULT_BACKGROUND 0x000000
+#define COLOR_DEFAULT_FACE 0xffffff
+#define COLOR_DEFAULT_STEPS 0x482748
+#define COLOR_DEFAULT_WEATHER 0x4cb4db
+#define COLOR_DEFAULT_HOURHAND 0xe35462
+#define COLOR_DEFAULT_MINUTEHAND 0xffffff
 
 static const struct GPathInfo ANALOG_BG_POINTS[] = {
   { 4, (GPoint []){
