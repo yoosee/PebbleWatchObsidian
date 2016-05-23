@@ -21,7 +21,18 @@ static char s_date_buffer[12];
 static int s_temp_c;
 static char s_weather_condition[32];
 
-static int32_t color_background, color_face, color_steps, color_weather, color_hourhand, color_minutehand;
+static int32_t colorcode_background, colorcode_face, colorcode_steps, colorcode_weather, colorcode_hourhand, colorcode_minutehand;
+
+/* *** Color Configuration *** */
+
+static void setup_colors() {
+  colorcode_background = persist_read_int(KEY_COLOR_BACKGROUND) ? persist_read_int(KEY_COLOR_BACKGROUND) : COLOR_DEFAULT_BACKGROUND;
+  colorcode_face = persist_read_int(KEY_COLOR_FACE) ? persist_read_int(KEY_COLOR_FACE) : COLOR_DEFAULT_FACE;
+  colorcode_steps = persist_read_int(KEY_COLOR_STEPS) ? persist_read_int(KEY_COLOR_STEPS) : COLOR_DEFAULT_STEPS;
+  colorcode_weather = persist_read_int(KEY_COLOR_WEATHER) ? persist_read_int(KEY_COLOR_WEATHER) : COLOR_DEFAULT_WEATHER;
+  colorcode_hourhand = persist_read_int(KEY_COLOR_HOURHAND) ? persist_read_int(KEY_COLOR_HOURHAND) : COLOR_DEFAULT_HOURHAND;
+  colorcode_minutehand = persist_read_int(KEY_COLOR_MINUTEHAND) ? persist_read_int(KEY_COLOR_MINUTEHAND) : COLOR_DEFAULT_MINUTEHAND;
+}
 
 /* *** Bluetooth Callback *** */
 
@@ -40,13 +51,11 @@ static void bluetooth_callback(bool connected) {
 
 static void proc_bg_update (Layer *layer, GContext *ctx) {
   
-  // Read and setup Background Color (default Black)
-  int32_t colorcode_background = persist_read_int(KEY_COLOR_BACKGROUND) ? persist_read_int(KEY_COLOR_BACKGROUND) : 0x000000;
+  // Read and setup Background & Facce Color
+  setup_colors();
   GColor color_background = GColorFromHEX(colorcode_background);
   window_set_background_color(s_main_window, color_background);
   
-  // Read and setup Face Color (default White)
-  int32_t colorcode_face = persist_read_int(KEY_COLOR_FACE) ? persist_read_int(KEY_COLOR_FACE) : 0xffffff;
   GColor color_face = GColorFromHEX(colorcode_face);
   
   APP_LOG(APP_LOG_LEVEL_INFO, "BG and Face Color: %02x, %02x", (int)colorcode_background, (int)colorcode_face);
@@ -308,17 +317,6 @@ static void main_window_unload(Window *window) {
   
   gbitmap_destroy(s_bt_icon_bitmap);
   bitmap_layer_destroy(s_bt_icon_layer);
-}
-
-/* *** Color Configuration *** */
-
-static void setup_colors() {
-  color_background = persist_read_int(KEY_COLOR_BACKGROUND) ? persist_read_int(KEY_COLOR_BACKGROUND) : 0x000000;
-  color_face = persist_read_int(KEY_COLOR_FACE) ? persist_read_int(KEY_COLOR_FACE) : 0xffffff;
-  color_steps = persist_read_int(KEY_COLOR_STEPS) ? persist_read_int(KEY_COLOR_STEPS) : 0x482748;
-  color_weather = persist_read_int(KEY_COLOR_WEATHER) ? persist_read_int(KEY_COLOR_WEATHER) : 0x4cb4db;
-  color_hourhand = persist_read_int(KEY_COLOR_HOURHAND) ? persist_read_int(KEY_COLOR_HOURHAND) : 0xe35462;
-  color_minutehand = persist_read_int(KEY_COLOR_MINUTEHAND) ? persist_read_int(KEY_COLOR_MINUTEHAND) : 0xffffff;
 }
 
 /* *** init / deinit and setup functions *** */
