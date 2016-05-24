@@ -68,7 +68,7 @@ static void proc_bg_update (Layer *layer, GContext *ctx) {
   
   GColor color_face = GColorFromHEX(colorcode_face);
   
-  APP_LOG(APP_LOG_LEVEL_INFO, "BG and Face Color: %02x, %02x", (int)colorcode_background, (int)colorcode_face);
+  //APP_LOG(APP_LOG_LEVEL_INFO, "BG and Face Color: %02x, %02x", (int)colorcode_background, (int)colorcode_face);
   
   graphics_context_set_fill_color(ctx, color_face);
   for (int i = 0; i < NUM_CLOCK_TICKS; ++i) {
@@ -206,21 +206,20 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *color_hourhand_tuple = dict_find(iterator, KEY_COLOR_HOURHAND);
   Tuple *color_minutehand_tuple = dict_find(iterator, KEY_COLOR_MINUTEHAND);
   
-  if(color_background_tuple) { persist_write_int(KEY_COLOR_BACKGROUND, color_background_tuple->value->int32); 
-                             APP_LOG(APP_LOG_LEVEL_INFO, "background color tuple: %02x", (int)color_background_tuple->value->int32);
-                             }
+  if(color_background_tuple) { persist_write_int(KEY_COLOR_BACKGROUND, color_background_tuple->value->int32); }
   if(color_face_tuple)            { persist_write_int(KEY_COLOR_FACE, color_face_tuple->value->int32); }
   if(color_steps_tuple)          { persist_write_int(KEY_COLOR_STEPS, color_steps_tuple->value->int32); }
   if(color_weather_tuple)     { persist_write_int(KEY_COLOR_WEATHER, color_weather_tuple->value->int32); }
   if(color_hourhand_tuple)    { persist_write_int(KEY_COLOR_HOURHAND, color_hourhand_tuple->value->int32); }
   if(color_minutehand_tuple) { persist_write_int(KEY_COLOR_MINUTEHAND, color_minutehand_tuple->value->int32); }
   
-  if(color_steps_tuple && color_weather_tuple) {
+  if(color_background_tuple || color_face_tuple || color_steps_tuple || color_weather_tuple || color_hourhand_tuple || color_hourhand_tuple) {
     update_colors();
+    layer_mark_dirty(window_get_root_layer(s_main_window));
   }
   
   if(is_fahrenheit_tuple) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
+    //APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
     if (is_fahrenheit_tuple->value->int8 > 0) {
       persist_write_bool(KEY_IS_FAHRENHEIT, true);
     } else {
@@ -233,7 +232,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if(temp_tuple && conditions_tuple) {
     s_temp_c = temp_tuple->value->int32;
     snprintf(s_weather_condition, sizeof(s_weather_condition), "%s", conditions_tuple->value->cstring);  
-    APP_LOG(APP_LOG_LEVEL_INFO, "weather update from tuple: %s %d", s_weather_condition, s_temp_c);
+    //APP_LOG(APP_LOG_LEVEL_INFO, "weather update from tuple: %s %d", s_weather_condition, s_temp_c);
     update_weather();
   }
   

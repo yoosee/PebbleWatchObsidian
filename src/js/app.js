@@ -82,8 +82,8 @@ Pebble.addEventListener('appmessage',
 // Configuration
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
-  // var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html' // produuction
+  // var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
+  var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html' // produuction
   console.log('Showing configuration page: ' + url);
 
   Pebble.openURL(url);
