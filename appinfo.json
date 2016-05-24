@@ -8,6 +8,7 @@
         "KEY_COLOR_WEATHER": 13,
         "KEY_CONDITIONS": 1,
         "KEY_IS_FAHRENHEIT": 2,
+        "KEY_IS_STEPS_ENABLED": 3,
         "KEY_TEMPERATURE": 0
     },
     "capabilities": [

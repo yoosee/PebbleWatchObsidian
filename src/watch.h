@@ -4,6 +4,7 @@
 #define KEY_CONDITIONS 1
 
 #define KEY_IS_FAHRENHEIT 2
+#define KEY_IS_STEPS_ENABLED 3
 
 #define KEY_COLOR_BACKGROUND 10
 #define KEY_COLOR_FACE 11
@@ -14,6 +15,9 @@
 
 extern void init();
 extern void deinit();
+
+extern void main_window_load(Window *window);
+extern void main_window_unload(Window *window);
 
 // Watch Configuration resources
 

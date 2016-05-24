@@ -95,15 +95,18 @@ Pebble.addEventListener('webviewclosed', function(e) {
   
   //var background_color = configData['background_color'];
   var is_fahrenheit = configData['is_fahrenheit'] ? 1 : 0; // Send a boolean as an integer
+  //var is_steps_enabled = configData['is_steps_enabled'] ? 1 : 0; // Send a boolean as an integer
+  var is_steps_enabled = configData['is_fahrenheit'] ? 1 : 0; // for test
   
   var dictionary = {
     'KEY_IS_FAHRENHEIT': is_fahrenheit,
+    'KEY_IS_STEPS_ENABLED': is_steps_enabled,
     'KEY_COLOR_BACKGROUND': parseInt(configData['background_color']),
     'KEY_COLOR_FACE': parseInt(configData['face_color']),
     'KEY_COLOR_STEPS': parseInt(configData['steps_color']),
     'KEY_COLOR_WEATHER': parseInt(configData['weather_color']),
     'KEY_COLOR_HOURHAND': parseInt(configData['hourhand_color']),
-    'KEY_COLOR_MINUTEHAND': parseInt(configData['minutehand_color'])
+    'KEY_COLOR_MINUTEHAND': parseInt(configData['minutehand_color']) >= 0 ? parseInt(configData['minutehand_color']) : -1
   };
   
   // Send to watchapp

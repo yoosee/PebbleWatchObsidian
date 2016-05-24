@@ -68,8 +68,6 @@ static void proc_bg_update (Layer *layer, GContext *ctx) {
   
   GColor color_face = GColorFromHEX(colorcode_face);
   
-  //APP_LOG(APP_LOG_LEVEL_INFO, "BG and Face Color: %02x, %02x", (int)colorcode_background, (int)colorcode_face);
-  
   graphics_context_set_fill_color(ctx, color_face);
   for (int i = 0; i < NUM_CLOCK_TICKS; ++i) {
     const int x_offset = PBL_IF_ROUND_ELSE(18, 0);
@@ -152,17 +150,27 @@ static void proc_date_update (Layer *layer, GContext *ctx) {
 
 /* *** tick handlers *** */
 
+static void update_steps_label(bool is_enabled) {
+  if(is_enabled) {
+    static char steps_buffer[] = MAX_HEALTH_STR;
+    update_health(steps_buffer);
+    text_layer_set_text(s_steps_label, steps_buffer);
+  } else {
+    text_layer_set_text(s_steps_label, "");
+  }
+}
+
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  if(tick_time->tm_sec % TICK_UPDATE_SECONDS == 0) { // update in every 30 sec
+  if(tick_time->tm_sec % TICK_UPDATE_SECONDS == 0) { // update in every TICK_UPDATE_SECONDS sec
     layer_mark_dirty(window_get_root_layer(s_main_window));
   }
 }
 
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Update Health Steps every minute
-  static char steps_buffer[] = MAX_HEALTH_STR;
-  update_health(steps_buffer);
-  text_layer_set_text(s_steps_label, steps_buffer);
+  
+  bool is_steps_enabled = persist_exists(KEY_IS_STEPS_ENABLED) ? persist_read_bool(KEY_IS_STEPS_ENABLED) : true;
+  update_steps_label(is_steps_enabled);
   
   // Get weather update every 30 minutes
   if(tick_time->tm_min % 30 == 0) { 
@@ -198,6 +206,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
   Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
   Tuple *is_fahrenheit_tuple = dict_find(iterator, KEY_IS_FAHRENHEIT);
+  Tuple *is_steps_enabled_tuple = dict_find(iterator, KEY_IS_STEPS_ENABLED);
   
   Tuple *color_background_tuple = dict_find(iterator, KEY_COLOR_BACKGROUND);
   Tuple *color_face_tuple = dict_find(iterator, KEY_COLOR_FACE);
@@ -206,20 +215,30 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *color_hourhand_tuple = dict_find(iterator, KEY_COLOR_HOURHAND);
   Tuple *color_minutehand_tuple = dict_find(iterator, KEY_COLOR_MINUTEHAND);
   
-  if(color_background_tuple) { persist_write_int(KEY_COLOR_BACKGROUND, color_background_tuple->value->int32); }
+  if(color_background_tuple ) { persist_write_int(KEY_COLOR_BACKGROUND, color_background_tuple->value->int32); }
   if(color_face_tuple)            { persist_write_int(KEY_COLOR_FACE, color_face_tuple->value->int32); }
   if(color_steps_tuple)          { persist_write_int(KEY_COLOR_STEPS, color_steps_tuple->value->int32); }
   if(color_weather_tuple)     { persist_write_int(KEY_COLOR_WEATHER, color_weather_tuple->value->int32); }
   if(color_hourhand_tuple)    { persist_write_int(KEY_COLOR_HOURHAND, color_hourhand_tuple->value->int32); }
-  if(color_minutehand_tuple) { persist_write_int(KEY_COLOR_MINUTEHAND, color_minutehand_tuple->value->int32); }
+  if(color_minutehand_tuple && color_minutehand_tuple->value->int32 >= 0) { persist_write_int(KEY_COLOR_MINUTEHAND, color_minutehand_tuple->value->int32); }
   
   if(color_background_tuple || color_face_tuple || color_steps_tuple || color_weather_tuple || color_hourhand_tuple || color_hourhand_tuple) {
     update_colors();
     layer_mark_dirty(window_get_root_layer(s_main_window));
   }
   
+  if(is_steps_enabled_tuple) {
+    if(is_steps_enabled_tuple->value->int8 > 0) {
+      persist_write_bool(KEY_IS_STEPS_ENABLED, true);
+      update_steps_label(true);
+    } else {
+      persist_write_bool(KEY_IS_STEPS_ENABLED, false);
+      update_steps_label(false);
+    }
+    layer_mark_dirty(window_get_root_layer(s_main_window));
+  }
+  
   if(is_fahrenheit_tuple) {
-    //APP_LOG(APP_LOG_LEVEL_INFO, "is_fahrenheit: %d", is_fahrenheit_tuple->value->int8);
     if (is_fahrenheit_tuple->value->int8 > 0) {
       persist_write_bool(KEY_IS_FAHRENHEIT, true);
     } else {
@@ -250,7 +269,7 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 
 /* *** main window load & unload *** */
 
-static void main_window_load(Window *window) {
+void main_window_load(Window *window) {
   // Get information about the Window
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -308,7 +327,7 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_steps_label, s_steps_font);
   text_layer_set_text(s_steps_label, "00000");
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_steps_label));
-      
+  
   // Create Bluetooth layer
   s_bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BG_DISCONNECTED);
   s_bt_icon_layer = bitmap_layer_create(GRect(46, 78, 19, 24));
@@ -323,14 +342,14 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, s_hands_layer);
 }
 
-static void main_window_unload(Window *window) {  
+void main_window_unload(Window *window) {  
   layer_destroy(s_bg_layer);
   layer_destroy(s_date_layer);
   layer_destroy(s_hands_layer);
   
   text_layer_destroy(s_date_label);
-  text_layer_destroy(s_weather_label);
   text_layer_destroy(s_steps_label);
+  text_layer_destroy(s_weather_label);
   
   fonts_unload_custom_font(s_weather_font);
   fonts_unload_custom_font(s_date_font);
