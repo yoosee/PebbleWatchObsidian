@@ -29,6 +29,19 @@
     </div>
 
 		<div class="item-container">
+			<div class="item-container-header">Health Steps</div>
+			<div class="item-container-content">
+				<label class="item">
+					Display Health Steps or not.
+					<input id="is_steps" type="checkbox" class="item-toggle" checked>
+				</label>
+			</div>
+			<div class="item-container-footer">
+				Display or Hide Pebble Health Steps counts.
+			</div>
+		</div>
+		
+		<div class="item-container">
 			<div class="item-container-header">Temparature Unit (C/F)</div>
 			<div class="item-container-content">
 				<label class="item">
@@ -94,6 +107,7 @@
   <script>
   function getConfigData() {
     var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+    var isStepsCheckbox = document.getElementById('is_steps');
     var backgroundColorPicker = document.getElementById('background_color_picker');
     var faceColorPicker = document.getElementById('face_color_picker');
     var stepsColorPicker = document.getElementById('steps_color_picker');
@@ -103,6 +117,7 @@
  
     var options = {
       'is_fahrenheit': isFahrenheitCheckbox.checked,
+      'is_steps': isStepsCheckbox.checked,
       'background_color': backgroundColorPicker.value,
       'face_color': faceColorPicker.value,
       'steps_color': stepsColorPicker.value,
@@ -113,6 +128,7 @@
 
     // Save for next launch
     localStorage['is_fahrenheit'] = options['is_fahrenheit'];
+    localStorage['is_steps'] = options['is_steps'];
     localStorage['background_color'] = options['background_color'];
     localStorage['face_color'] = options['face_color'];
     localStorage['steps_color'] = options['steps_color'];
@@ -147,6 +163,7 @@
 
   (function() {
     var isFahrenheitCheckbox = document.getElementById('is_fahrenheit');
+    var isStepsCheckbox = document.getElementById('is_steps');
     var backgroundColorPicker = document.getElementById('background_color_picker');
     var faceColorPicker = document.getElementById('face_color_picker');
     var stepsColorPicker = document.getElementById('steps_color_picker');
@@ -157,6 +174,7 @@
     // Load any previously saved configuration, if available
     if(localStorage['is_fahrenheit']) {
       isFahrenheitCheckbox.checked = JSON.parse(localStorage['is_fahrenheit']);
+      isStepsCheckbox.checked = JSON.parse(localStorage['is_steps']);
       backgroundColorPicker.value = localStorage['background_color'];
       faceColorPicker.value = localStorage['face_color'];
       stepsColorPicker.value = localStorage['steps_color'];
