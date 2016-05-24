@@ -82,8 +82,8 @@ Pebble.addEventListener('appmessage',
 // Configuration
 
 Pebble.addEventListener('showConfiguration', function() {
-  // var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
-  var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html' // produuction
+  //var url = 'https://rawgit.com/yoosee/PebbleWatchObsidian/master/config/index.html'; // development
+  var url = 'https://cdn.rawgit.com/yoosee/PebbleWatchObsidian/4da3aa36bba44ddb6a05417cca57afd5135799a4/config/index.html' // produuction URL in rawgit.com should be unique like commit hash.
   console.log('Showing configuration page: ' + url);
 
   Pebble.openURL(url);
@@ -95,8 +95,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
   
   //var background_color = configData['background_color'];
   var is_fahrenheit = configData['is_fahrenheit'] ? 1 : 0; // Send a boolean as an integer
-  //var is_steps_enabled = configData['is_steps_enabled'] ? 1 : 0; // Send a boolean as an integer
-  var is_steps_enabled = configData['is_fahrenheit'] ? 1 : 0; // for test
+  var is_steps_enabled = configData['is_steps'] ? 1 : 0; 
   
   var dictionary = {
     'KEY_IS_FAHRENHEIT': is_fahrenheit,
