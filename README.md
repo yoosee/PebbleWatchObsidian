@@ -5,10 +5,10 @@ Pebble Watchface named Obsidian. Open Source Software (GPLv2).
 ## Functions
 
 * Analog Watchface with date
-* Weather for current location
-* Pebble Health Steps
+* Weather for current location (toggle Celsius or Fahrenheit by config)
+* Pebble Health Steps (toggle display by config)
 * Configurable Colors
-* Bluetooth indigator
+* Bluetooth indigator when disconnected
 
 ## Reference sites
 
