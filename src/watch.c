@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <ctype.h>
 #include "watch.h"
 #include "health.h"
 
@@ -143,8 +144,9 @@ static void proc_hands_update (Layer *layer, GContext *ctx) {
 static void proc_date_update (Layer *layer, GContext *ctx) {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
-  
   strftime(s_date_buffer, sizeof(s_date_buffer), "%a %d", t);
+  char *s = s_date_buffer;
+  while(*s) *s++ = toupper((int)*s);
   text_layer_set_text(s_date_label, s_date_buffer);
 }
 
@@ -290,12 +292,12 @@ void main_window_load(Window *window) {
   GColor color_face = GColorFromHEX(colorcode_face);
 
   s_date_label = text_layer_create(PBL_IF_ROUND_ELSE(
-    GRect(118, 74, 44, 25),
-    GRect(88, 74, 44, 25)));
+    GRect(112, 81, 44, 23),
+    GRect(88, 78, 44, 25)));
   text_layer_set_text(s_date_label, s_date_buffer);
   text_layer_set_background_color(s_date_label, GColorClear);
   text_layer_set_text_color(s_date_label, color_face);
-  s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_24));
+  s_date_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DATE_14));
   text_layer_set_font(s_date_label, s_date_font);
   layer_add_child(s_date_layer, text_layer_get_layer(s_date_label));
   

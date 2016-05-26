@@ -23,6 +23,13 @@
     "resources": {
         "media": [
             {
+                "characterRegex": "[0-9a-zA-Z ]",
+                "file": "fonts/AldoPC.ttf",
+                "name": "FONT_DATE_14",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
                 "file": "images/download.png",
                 "menuIcon": true,
                 "name": "IMAGE_FACEICON",
@@ -43,13 +50,6 @@
                 "type": "font"
             },
             {
-                "characterRegex": "[0-9a-zA-Z ]",
-                "file": "fonts/DSNarXC.ttf",
-                "name": "FONT_DATE_24",
-                "targetPlatforms": null,
-                "type": "font"
-            },
-            {
                 "characterRegex": "[0-9]",
                 "file": "fonts/Coda-Heavy.ttf",
                 "name": "FONT_FACENUM_27",
@@ -65,7 +65,7 @@
         "chalk"
     ],
     "uuid": "12b2b931-9d8d-4750-b466-9584b9c1976b",
-    "versionLabel": "1.1",
+    "versionLabel": "1.2",
     "watchapp": {
         "watchface": true
     }
