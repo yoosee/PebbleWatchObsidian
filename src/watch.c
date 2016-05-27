@@ -49,6 +49,8 @@ static void update_colors() {
 
 // Bluetooth connection indicator (shown when disconnected)
 static void bluetooth_callback(bool connected) {
+  //APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth Connection: %d",(int) connected);
+  
   // Show icon if disconnected
   layer_set_hidden(bitmap_layer_get_layer(s_bt_icon_layer), connected);
 
@@ -390,10 +392,7 @@ static void setup_callbacks() {
   app_message_register_inbox_dropped(inbox_dropped_callback);
   app_message_register_outbox_failed(outbox_failed_callback);
   app_message_register_outbox_sent(outbox_sent_callback);
-  
-  //s_temp_c = 0;
-  //s_weather_condition[0] = '\0';
-  
+
   // Open AppMessage
   //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   app_message_open(APP_MESSAGE_INBOX_SIZE_MINIMUM, APP_MESSAGE_OUTBOX_SIZE_MINIMUM);
@@ -420,6 +419,11 @@ void init() {
 
   // Setup hands and face
   setup_face_hands();
+  
+  // Register for Bluetooth connection updates
+  connection_service_subscribe((ConnectionHandlers) {
+    .pebble_app_connection_handler = bluetooth_callback
+  });
   
   // Subscribe Tick Timer
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
