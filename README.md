@@ -21,3 +21,7 @@ Pebble Watchface named Obsidian. Open Source Software (GPLv2).
  * http://fontmeme.com/freefonts/8629/aldo.font
  * ~~http://fontmeme.com/freefonts/7213/ds_narrow.font~~
 * http://rawgit.com/
+* Weather
+ * http://openweathermap.org/current#geo (Openweathermap seems not good accuracy in terms of Weather info...)
+ * https://www.wunderground.com/weather/api/d/docs?d=resources/code-samples (TBD)
+ * https://developer.yahoo.com/weather/ (TBD)
