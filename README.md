@@ -18,5 +18,6 @@ Pebble Watchface named Obsidian. Open Source Software (GPLv2).
 * http://fontmeme.com/freefonts/
  * http://fontmeme.com/freefonts/96940/coda.font
  * http://fontmeme.com/freefonts/156426/taco_bell_bold.font
- * http://fontmeme.com/freefonts/7213/ds_narrow.font
+ * http://fontmeme.com/freefonts/8629/aldo.font
+ * ~~http://fontmeme.com/freefonts/7213/ds_narrow.font~~
 * http://rawgit.com/
