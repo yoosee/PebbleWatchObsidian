@@ -185,6 +185,14 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   }
 }
 
+/* *** focus handler *** */
+
+static void handle_focus(bool focus) {
+  if (focus) {
+    layer_mark_dirty(window_get_root_layer(s_main_window));
+  }
+}
+
 /* *** Update Weather *** */
 
 static void update_weather() {
@@ -425,6 +433,11 @@ void init() {
     .pebble_app_connection_handler = bluetooth_callback
   });
   
+  // App Forcus Handler (case Watch received notification over watchface and back to get focus)
+  app_focus_service_subscribe_handlers((AppFocusHandlers) {
+    .did_focus = handle_focus,
+  });
+  
   // Subscribe Tick Timer
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
@@ -437,5 +450,7 @@ void deinit() {
     gpath_destroy(s_tick_paths[i]);
   }
   tick_timer_service_unsubscribe();
+  connection_service_unsubscribe();
+  app_focus_service_unsubscribe();
   window_destroy(s_main_window);
 }
