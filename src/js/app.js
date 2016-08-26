@@ -1,3 +1,14 @@
+var WEATHER_SERVICE_GOV = 'GOV';
+var WEATHER_SERVICE_OPENWEATHER = 'OW';
+var WEATHER_SERVICE_WUNDERGROUND = 'WU';
+
+// Configuration Valuables
+var dataStore = {
+  weather_service: WEATHER_SERVICE_GOV, 
+  openWeather_apikey: "40ed40883f0964911396ea2c04020029",
+  wu_apikey: "", // WUnderground is billed service, while it has $0 plan.
+};
+
 var xhrRequest = function (url, type, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function () {
@@ -7,59 +18,105 @@ var xhrRequest = function (url, type, callback) {
   xhr.send();
 };
 
-var myAPIKey = "40ed40883f0964911396ea2c04020029";
-
-function locationSuccess(pos) {
-  // Construct URL
-  var url = 'http://api.openweathermap.org/data/2.5/weather?lat=' +
-      pos.coords.latitude + '&lon=' + pos.coords.longitude + '&appid=' + myAPIKey;
+var locationSuccess = function(pos) {
+  if (dataStore.weather_service == WEATHER_SERVICE_GOV) {
+    fetchWeatherGovWeather(pos.coords.latitude, pos.coords.longitude);
+  } else if (dataStore.weather_service == WEATHER_SERVICE_OPENWEATHER) {
+    fetchOpenWeather(pos.coords.latitude, pos.coords.longitude);
+  } else if (dataStore.weather_service == WEATHER_SERVICE_WUNDERGROUND) {
+    fetchWUWeather(pos.coords.latitude, pos.coords.longitude);
+  }
   
-  // Send request to OpenWeatherMap
-  xhrRequest(url, 'GET',
-    function(responseText) {
-       // responseText contains a JSON object with weather info
-       var json = JSON.parse(responseText);
-        
-       // Temperature in Kelvin requires adjustment
-       var temperature = Math.round(json.main.temp - 273.15);
-       console.log('Temperature is ' + temperature);
-           
-       // Conditions
-       var conditions = json.weather[0].main;
-       console.log('Conditions are ' + conditions);
-      
-      var condistions_max_length = 8;
-      
-      // Assemble dictionary using our keys
-      var dictionary = {
-          'KEY_TEMPERATURE': temperature,
-          'KEY_CONDITIONS': conditions.substring(0, Math.min(condistions_max_length,conditions.length)).toUpperCase()
-      };
+};
 
-      // Send to Pebble
-      Pebble.sendAppMessage(dictionary, 
-                            function(e) {
-                              console.log('Weather info sent to Pebble successfully!');
-                            },
-                            function(e) {
-                              console.log('Error sending weather info to Pebble!');
-                            }
-                           );
-    }
-            );
-}
-
-function locationError(err) {
+var locationError = function(err) {
   console.log('Error requesting location!');
-}
+};
 
-function getWeather() {
+var getWeather = function() {
   navigator.geolocation.getCurrentPosition(
     locationSuccess,
     locationError,
     {timeout: 15000, maximumAge: 60000}
   );
+};
+             
+var fetchWeather = function(params) {
+  xhrRequest(params.url, 'GET', function(responseText){
+    var weather = params.parse(responseText);
+      
+    console.log('[fetchWeather] Temperature is ' + weather.temperature);
+    console.log('[fetchWeather] Conditions are ' + weather.conditions);
+
+    var condistions_max_length = 8;   
+    // Assemble dictionary using our keys
+    var dictionary = {
+      'KEY_TEMPERATURE': weather.temperature, // Celcius
+      'KEY_CONDITIONS': weather.conditions.substring(0, Math.min(condistions_max_length,weather.conditions.length)).toUpperCase()  
+    };
+    // Send to Pebble
+    Pebble.sendAppMessage(dictionary, 
+                          function(e) { console.log('Weather info sent to Pebble successfully!');  },
+                          function(e) { console.log('Error sending weather info to Pebble!'); }
+                       );    
+  });
+};
+
+function fetchOpenWeather(lat, lon) {
+  var params = {};
+  params.url = 'http://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=' + dataStore.openWeather_apikey;
+  console.log('URL: ' + params.url);
+  params.parse = function(responseText) {
+       var json = JSON.parse(responseText);
+       var temperature = Math.round(json.main.temp - 273.15); // returned value is Kelvin
+       var conditions = json.weather[0].main;
+       console.log('Temperature is ' + temperature);
+       console.log('Conditions are ' + conditions);
+      return {
+                conditions: conditions,
+                temperature: temperature
+      };  
+  };
+  fetchWeather(params);
 }
+             
+function fetchWUWeather(lat, lon) {
+  var params = {};
+  params.url = 'http://api.wunderground.com/api/' + dataStore.wu_apikey + '/conditions/astronomy/q/' + lat + ',' + lon + '.json';
+  console.log('URL: ' + params.url);
+  params.parse = function(responseText) {
+              var json = JSON.parse(responseText);
+              var temperature = json.current_observation.temp_c;
+              var conditions = json.current_observation.weather;
+              console.log('Temperature is ' + temperature);
+              console.log('Conditions are ' + conditions); 
+              return {
+                conditions: conditions,
+                temperature: temperature
+              };          
+  };
+  fetchWeather(params);
+}
+
+var fetchWeatherGovWeather = function(lat, lon) {
+
+  var params = {};
+  params.url = 'http://forecast.weather.gov/MapClick.php?lat=' + lat + '&lon=' + lon + '&FcstType=json';
+  console.log('URL: ' + params.url);
+  params.parse = function(responseText) {
+              var json = JSON.parse(responseText);
+              var temperature = Math.round((json.currentobservation.Temp - 32.0) * 5 / 9 ); // F to C
+              //var conditions = json.currentobservation.Weather;
+              var conditions = translateIconToWeather(json.currentobservation.Weatherimage);
+              console.log('Temperature is ' + temperature);
+              console.log('Conditions are ' + conditions);
+              return {
+                conditions: conditions,
+                temperature: temperature
+              };          
+  };    
+  fetchWeather(params);
+};
 
 // Listen for when the watchface is opened
 Pebble.addEventListener('ready', 
@@ -116,3 +173,39 @@ Pebble.addEventListener('webviewclosed', function(e) {
   });
 });
 
+// Conversion from Icon image name to Weather condition strings, for Weather.GOV service.
+// http://w1.weather.gov/xml/current_obs/weather.php
+var translateIconToWeather = function (icon) {
+
+  iconname = icon.replace(/\.png/, "").replace(/^n/, ""); // remove suffix and prefix of 'n' represents 'Night', not necessary for weather condition strings.
+  
+  var cond = {
+    'bkn': 'Cloud',
+    'skc': 'Clear',
+    'few': 'Few',
+    'sct': 'Scatter',
+    'ovc': 'Cloud',
+    'fg': 'Fog',
+    'smoke': 'Smoke',
+    'fzra': 'Freeze',
+    'ip': 'Ice',
+    'mix': 'Ice',
+    'raip': 'Rain Ice',
+    'rasn': 'RainSnow',
+    'shra': 'Showers',
+    'tsra': 'ThunderS',
+    'sn': 'Snow',
+    'wind': 'Windy',
+    'hi_shwrs': 'Cloud', // Showers in Vicinity
+    'hi_nshwrs': 'Cloud', // Showers in Vicinity
+    'fzrara': 'Freeze',
+    'hi_tsra': 'Thunder', // Thunderstorm in Vicinity
+    'hi_ntsra': 'Thunder', // Thunderstorm in Vicinity
+    'ra1': 'Mist',
+    'ra' : 'Rain',
+    'nsvrtsra': 'Tornado',
+    'dust': 'Dust',
+    'mist': 'Haze'
+  };
+  return cond[iconname];
+};
