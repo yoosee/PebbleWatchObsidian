@@ -182,7 +182,7 @@ var translateIconToWeather = function (icon) {
   var cond = {
     'bkn': 'Cloud',
     'skc': 'Clear',
-    'few': 'Few',
+    'few': 'FewCloud',
     'sct': 'Scatter',
     'ovc': 'Cloud',
     'fg': 'Fog',
@@ -190,7 +190,7 @@ var translateIconToWeather = function (icon) {
     'fzra': 'Freeze',
     'ip': 'Ice',
     'mix': 'Ice',
-    'raip': 'Rain Ice',
+    'raip': 'RainIce',
     'rasn': 'RainSnow',
     'shra': 'Showers',
     'tsra': 'ThunderS',
