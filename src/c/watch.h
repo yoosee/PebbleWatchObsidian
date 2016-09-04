@@ -13,6 +13,8 @@
 #define KEY_COLOR_HOURHAND 14
 #define KEY_COLOR_MINUTEHAND 15
 
+#define KEY_JSReady 20
+
 extern void init();
 extern void deinit();
 

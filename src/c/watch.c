@@ -22,6 +22,8 @@ static char s_date_buffer[12];
 static int s_temp_c;
 static char s_weather_condition[32];
 
+static bool s_js_ready;
+
 static int32_t colorcode_background, colorcode_face, colorcode_steps, colorcode_weather, colorcode_hourhand, colorcode_minutehand;
 
 /* *** Color Configuration *** */
@@ -164,15 +166,8 @@ static void update_steps_label(bool is_enabled) {
   }
 }
 
-static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  if(tick_time->tm_sec % TICK_UPDATE_SECONDS == 0) { // update in every TICK_UPDATE_SECONDS sec
-    layer_mark_dirty(window_get_root_layer(s_main_window));
-  }
-}
-
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Update Health Steps every minute
-  
   bool is_steps_enabled = persist_exists(KEY_IS_STEPS_ENABLED) ? persist_read_bool(KEY_IS_STEPS_ENABLED) : true;
   update_steps_label(is_steps_enabled);
   
@@ -195,7 +190,7 @@ static void handle_focus(bool focus) {
 
 /* *** Update Weather *** */
 
-static void update_weather() {
+static void update_weather_label() {
   static char temperature_buffer[8];
   static char weather_label_buffer[32];
   
@@ -205,15 +200,39 @@ static void update_weather() {
     } else {
       snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)s_temp_c); // Celsius by default    
     }
+  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather_label(): %s (%s)", s_weather_condition, temperature_buffer);
+  if(strlen(s_weather_condition) <= 0) { // when data is still empty, possibly waiting for JSReady
+    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "LOADING..");
+  } else if (strncmp("Unknown", s_weather_condition, 7) == 0) {  // when JS returned Unknown, most likely failed to fetch weather data
+      snprintf(weather_label_buffer, sizeof(weather_label_buffer), "UNKNOWN");
+  } else {
     snprintf(weather_label_buffer, sizeof(weather_label_buffer), "%s\n%s", s_weather_condition, temperature_buffer);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Weather: %s", weather_label_buffer);
-    text_layer_set_text(s_weather_label, weather_label_buffer);
-  //}
+  }
+  text_layer_set_text(s_weather_label, weather_label_buffer);
+}
+
+
+static void update_weather() {
+  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather()");
+  if (s_js_ready == false) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "JSReady is not ready."); // TODO: should implement wait and retry, but now weather update called in 'ready' in JS.
+  }
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  dict_write_uint8(iter, 0, 0);
+  app_message_outbox_send();
+  update_weather_label();
 }
 
 /* *** callbacks *** */
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  // JSReady check
+  Tuple *ready_tuple = dict_find(iterator, KEY_JSReady);
+  if(ready_tuple) {
+    s_js_ready = true;
+  }
+  
   // Read tuples for data
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMPERATURE);
   Tuple *conditions_tuple = dict_find(iterator, KEY_CONDITIONS);
@@ -256,7 +275,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     } else {
       persist_write_bool(KEY_IS_FAHRENHEIT, false);
     }
-    update_weather();
+    update_weather_label();
     layer_mark_dirty(window_get_root_layer(s_main_window));
   }
   
@@ -264,7 +283,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     s_temp_c = temp_tuple->value->int32;
     snprintf(s_weather_condition, sizeof(s_weather_condition), "%s", conditions_tuple->value->cstring);  
     //APP_LOG(APP_LOG_LEVEL_INFO, "weather update from tuple: %s %d", s_weather_condition, s_temp_c);
-    update_weather();
+    update_weather_label();
   }
   
 }
@@ -402,7 +421,6 @@ static void setup_callbacks() {
   app_message_register_outbox_sent(outbox_sent_callback);
 
   // Open AppMessage
-  //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   app_message_open(APP_MESSAGE_INBOX_SIZE_MINIMUM, APP_MESSAGE_OUTBOX_SIZE_MINIMUM);
 }
 
@@ -439,7 +457,6 @@ void init() {
   });
   
   // Subscribe Tick Timer
-  tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
 

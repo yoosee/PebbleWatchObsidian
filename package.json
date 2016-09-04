@@ -21,6 +21,7 @@
             "KEY_CONDITIONS": 1,
             "KEY_IS_FAHRENHEIT": 2,
             "KEY_IS_STEPS_ENABLED": 3,
+            "KEY_JSReady": 20,
             "KEY_TEMPERATURE": 0
         },
         "projectType": "native",
@@ -65,12 +66,13 @@
         "sdkVersion": "3",
         "targetPlatforms": [
             "basalt",
-            "chalk"
+            "chalk",
+            "diorite"
         ],
         "uuid": "12b2b931-9d8d-4750-b466-9584b9c1976b",
         "watchapp": {
             "watchface": true
         }
     },
-    "version": "1.2.0"
+    "version": "1.4.0"
 }

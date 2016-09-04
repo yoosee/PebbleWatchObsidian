@@ -33,32 +33,55 @@ var locationError = function(err) {
   console.log('Error requesting location!');
 };
 
+var send_weather_to_pebble = function(temperature, conditions) {
+    var dictionary = {
+        'KEY_TEMPERATURE': temperature,
+        'KEY_CONDITIONS': conditions,
+    };
+  // Cache values into local storage
+  localStorage.setItem('current_temperature', temperature);
+  localStorage.setItem('current_conditions', conditions);
+  Pebble.sendAppMessage(dictionary, 
+                        function(e) { console.log('Weather info sent to Pebble successfully!');  },                        
+                        function(e) { console.log('Error sending weather info to Pebble!'); }
+                       );
+};
+
 var getWeather = function() {
-  navigator.geolocation.getCurrentPosition(
-    locationSuccess,
-    locationError,
-    {timeout: 15000, maximumAge: 60000}
-  );
+  if ((Date.now() - localStorage.getItem('weather_last_updated')) > 10 * 60 * 1000 ){ // cache data for 10 min
+    console.log('Updating Weather');
+    localStorage.setItem('weather_last_updated', Date.now());
+    navigator.geolocation.getCurrentPosition(
+      locationSuccess,
+      locationError,
+      {timeout: 15000, maximumAge: 60000}
+    );
+  } else {
+    console.log('Sending previous Weather');
+    console.log('Stored Temperature is ' + parseInt(localStorage.getItem('current_temperature')));
+    console.log('Stored Conditions are ' + localStorage.getItem('current_conditions'));
+    send_weather_to_pebble(parseInt(localStorage.getItem('current_temperature')), localStorage.getItem('current_conditions'));
+  }
 };
              
 var fetchWeather = function(params) {
   xhrRequest(params.url, 'GET', function(responseText){
     var weather = params.parse(responseText);
-      
+    
+    if(weather.conditions === "") {
+      if (dataStore.weather_service == WEATHER_SERVICE_GOV) {
+        dataStore.weather_service = WEATHER_SERVICE_OPENWEATHER; // fallback from WG to OWM
+        getWeather();
+      } else {
+        weather.conditions = "Unknown";
+      }
+    }
     console.log('[fetchWeather] Temperature is ' + weather.temperature);
     console.log('[fetchWeather] Conditions are ' + weather.conditions);
-
-    var condistions_max_length = 8;   
-    // Assemble dictionary using our keys
-    var dictionary = {
-      'KEY_TEMPERATURE': weather.temperature, // Celcius
-      'KEY_CONDITIONS': weather.conditions.substring(0, Math.min(condistions_max_length,weather.conditions.length)).toUpperCase()  
-    };
-    // Send to Pebble
-    Pebble.sendAppMessage(dictionary, 
-                          function(e) { console.log('Weather info sent to Pebble successfully!');  },
-                          function(e) { console.log('Error sending weather info to Pebble!'); }
-                       );    
+    var condistions_max_length = 8;     
+    send_weather_to_pebble( 
+      weather.temperature,      
+      weather.conditions.substring(0, Math.min(condistions_max_length,weather.conditions.length)).toUpperCase());
   });
 };
 
@@ -70,8 +93,6 @@ function fetchOpenWeather(lat, lon) {
        var json = JSON.parse(responseText);
        var temperature = Math.round(json.main.temp - 273.15); // returned value is Kelvin
        var conditions = json.weather[0].main;
-       console.log('Temperature is ' + temperature);
-       console.log('Conditions are ' + conditions);
       return {
                 conditions: conditions,
                 temperature: temperature
@@ -88,8 +109,6 @@ function fetchWUWeather(lat, lon) {
               var json = JSON.parse(responseText);
               var temperature = json.current_observation.temp_c;
               var conditions = json.current_observation.weather;
-              console.log('Temperature is ' + temperature);
-              console.log('Conditions are ' + conditions); 
               return {
                 conditions: conditions,
                 temperature: temperature
@@ -108,8 +127,6 @@ var fetchWeatherGovWeather = function(lat, lon) {
               var temperature = Math.round((json.currentobservation.Temp - 32.0) * 5 / 9 ); // F to C
               //var conditions = json.currentobservation.Weather;
               var conditions = translateIconToWeather(json.currentobservation.Weatherimage);
-              console.log('Temperature is ' + temperature);
-              console.log('Conditions are ' + conditions);
               return {
                 conditions: conditions,
                 temperature: temperature
@@ -122,8 +139,7 @@ var fetchWeatherGovWeather = function(lat, lon) {
 Pebble.addEventListener('ready', 
   function(e) {
     console.log('PebbleKit JS ready!');
-
-    // Get the initial weather
+    Pebble.sendAppMessage({'KEY_JSReady': 1});
     getWeather();
   }
 );
