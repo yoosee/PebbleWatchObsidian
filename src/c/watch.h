@@ -27,6 +27,8 @@ extern void main_window_unload(Window *window);
 
 #define TICK_UPDATE_SECONDS 30
 
+#define WEATHER_UPDATE_INTERVAL_MINUTES 30
+
 #define COLOR_DEFAULT_BACKGROUND 0x000000
 #define COLOR_DEFAULT_FACE 0xffffff
 #define COLOR_DEFAULT_STEPS 0x482748

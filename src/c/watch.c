@@ -62,6 +62,42 @@ static void bluetooth_callback(bool connected) {
   }
 }
 
+/* *** Update Weather *** */
+
+static void update_weather_label() {
+  static char temperature_buffer[8];
+  static char weather_label_buffer[32];
+  
+  //if(s_temp_c && s_weather_condition != null) {
+    if(persist_read_bool(KEY_IS_FAHRENHEIT)) {          
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int) (s_temp_c * 9 / 5 + 32)); // Fahrenheit  
+    } else {
+      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)s_temp_c); // Celsius by default    
+    }
+  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather_label(): %s (%s)", s_weather_condition, temperature_buffer);
+  if(strlen(s_weather_condition) <= 0) { // when data is still empty, possibly waiting for JSReady
+    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "LOADING..");
+  } else if (strncmp("Unknown", s_weather_condition, 7) == 0) {  // when JS returned Unknown, most likely failed to fetch weather data
+      snprintf(weather_label_buffer, sizeof(weather_label_buffer), "UNKNOWN");
+  } else {
+    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "%s\n%s", s_weather_condition, temperature_buffer);
+  }
+  text_layer_set_text(s_weather_label, weather_label_buffer);
+}
+
+
+static void update_weather() {
+  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather()");
+  if (s_js_ready == false) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "JSReady is not ready."); // TODO: should implement wait and retry, but now weather update called in 'ready' in JS.
+  }
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  dict_write_uint8(iter, 0, 0);
+  app_message_outbox_send();
+  update_weather_label();
+}
+
 /* *** proc layer updates *** */
 
 static void proc_bg_update (Layer *layer, GContext *ctx) {
@@ -170,13 +206,10 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Update Health Steps every minute
   bool is_steps_enabled = persist_exists(KEY_IS_STEPS_ENABLED) ? persist_read_bool(KEY_IS_STEPS_ENABLED) : true;
   update_steps_label(is_steps_enabled);
-  
-  // Get weather update every 30 minutes
-  if(tick_time->tm_min % 30 == 0) { 
-    DictionaryIterator *iter;
-    app_message_outbox_begin(&iter);
-    dict_write_uint8(iter, 0, 0);
-    app_message_outbox_send();
+
+  // Get weather update every WEATHER_UPDATE_INTERVAL_MINUTES minutes. default would be 30 min (0 and 30 of each hour)
+  if(tick_time->tm_min % WEATHER_UPDATE_INTERVAL_MINUTES == 0) { 
+    update_weather();
   }
 }
 
@@ -186,42 +219,6 @@ static void handle_focus(bool focus) {
   if (focus) {
     layer_mark_dirty(window_get_root_layer(s_main_window));
   }
-}
-
-/* *** Update Weather *** */
-
-static void update_weather_label() {
-  static char temperature_buffer[8];
-  static char weather_label_buffer[32];
-  
-  //if(s_temp_c && s_weather_condition != null) {
-    if(persist_read_bool(KEY_IS_FAHRENHEIT)) {          
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dF", (int) (s_temp_c * 9 / 5 + 32)); // Fahrenheit  
-    } else {
-      snprintf(temperature_buffer, sizeof(temperature_buffer), "%dC", (int)s_temp_c); // Celsius by default    
-    }
-  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather_label(): %s (%s)", s_weather_condition, temperature_buffer);
-  if(strlen(s_weather_condition) <= 0) { // when data is still empty, possibly waiting for JSReady
-    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "LOADING..");
-  } else if (strncmp("Unknown", s_weather_condition, 7) == 0) {  // when JS returned Unknown, most likely failed to fetch weather data
-      snprintf(weather_label_buffer, sizeof(weather_label_buffer), "UNKNOWN");
-  } else {
-    snprintf(weather_label_buffer, sizeof(weather_label_buffer), "%s\n%s", s_weather_condition, temperature_buffer);
-  }
-  text_layer_set_text(s_weather_label, weather_label_buffer);
-}
-
-
-static void update_weather() {
-  APP_LOG(APP_LOG_LEVEL_INFO, "update_weather()");
-  if (s_js_ready == false) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "JSReady is not ready."); // TODO: should implement wait and retry, but now weather update called in 'ready' in JS.
-  }
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
-  dict_write_uint8(iter, 0, 0);
-  app_message_outbox_send();
-  update_weather_label();
 }
 
 /* *** callbacks *** */
@@ -344,6 +341,8 @@ void main_window_load(Window *window) {
   s_weather_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_INFOTEXT_14));
   text_layer_set_font(s_weather_label, s_weather_font);
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_weather_label));
+  
+  update_weather();
   
   // Create Health Steps layer
   s_steps_label = text_layer_create(
