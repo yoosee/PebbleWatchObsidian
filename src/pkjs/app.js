@@ -52,7 +52,7 @@ var send_weather_to_pebble = function(temperature, conditions) {
 // getWeather => locationSuccess => fetchXxxxWeather => fetchWeather
 
 var getWeather = function() {
-  if (((Date.now() - localStorage.getItem('weather_last_updated')) > 10 * 60 * 1000) || localStorage.getItem('current_conditions') === "" ){ // cache data for 10 min if data exists
+  if ((Date.now() - localStorage.getItem('weather_last_updated')) > 10 * 60 * 1000 || localStorage.getItem('current_conditions') == null || localStorage.getItem('current_conditions') == "" ){ // cache data for 10 min if data available
     console.log('Updating Weather');
     localStorage.setItem('weather_last_updated', Date.now());
     navigator.geolocation.getCurrentPosition(
