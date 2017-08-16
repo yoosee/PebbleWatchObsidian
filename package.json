@@ -47,7 +47,7 @@
                     "type": "bitmap"
                 },
                 {
-                    "characterRegex": "[0-9A-Z]",
+                    "characterRegex": "[0-9A-Z. ]",
                     "file": "fonts/taco_bell_bold.ttf",
                     "name": "FONT_INFOTEXT_14",
                     "targetPlatforms": null,
